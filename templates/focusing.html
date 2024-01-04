@@ -1,0 +1,210 @@
+{% extends "focusing_layout.html" %}
+
+{% block title %}
+    Focusing
+{% endblock %}
+
+{% block main %}
+    
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .outer-circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background-color: purple;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .inner-circle {
+            width: 275px;
+            height: 275px;
+            border-radius: 50%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .animation-bg {
+            background: linear-gradient(-45deg, #740c8e, #0602f5, #00b7ff, #00ff8c);
+            background-size: 400% 400%;
+            animation: gradient 7s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .text {
+            color: white;
+            font-size: 35px;
+            text-align: center;
+        }
+
+        .button-wrapper {
+            width: 300px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+        }
+
+        .button {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: 2px solid purple;
+            background-color: black;
+            border-color: purple;
+            color: white;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .button:hover {
+            background-color: black;
+            color: #740c8e;
+        }
+
+    </style>
+
+    <script>
+
+        let timerInterval;
+        let hours = 0;
+        let minutes = 0;
+        let seconds = 0;
+
+        function startTimer() {
+            timerInterval = setInterval(updateTimer, 1000);
+            const bg = document.getElementsByClassName("outer-circle")[0];
+            bg.classList.add("animation-bg");
+        }
+
+        function updateTimer() {
+            seconds++;
+            if (seconds === 60) {
+                seconds = 0;
+                minutes ++;
+                if (minutes === 60) {
+                    minutes = 0;
+                    hours++;
+                }
+            }
+
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const textElements = document.querySelectorAll(".text");
+            textElements[0].textContent = pad(hours) + ":";
+            textElements[1].textContent = pad(minutes) + ":";
+            textElements[2].textContent = pad(seconds);
+
+            localStorage.setItem("timerState", JSON.stringify({ hours, minutes, seconds }));
+        }
+
+        function pad(value) {
+            return value.toString().padStart(2, "0");
+        }
+
+        function stopTimer() {
+            clearInterval(timerInterval);
+            showResumeSaveButtons();
+            const bg = document.getElementsByClassName("outer-circle")[0];
+            bg.classList.remove("animation-bg");
+        }
+
+        function showResumeSaveButtons() {
+            const buttonWrapper = document.querySelector(".button-wrapper");
+            buttonWrapper.innerHTML = `
+                <button class="button" onclick="resumeTimer()">Resume</button>
+                <button class="button" onclick="saveTimer()" type="submit">Save</button>
+            `;
+            buttonWrapper.style.justifyContent = "space-between";
+        }
+
+        function resumeTimer() {
+            startTimer();
+            const buttonWrapper = document.querySelector(".button-wrapper");
+            buttonWrapper.innerHTML = `
+                <button class="button" onclick="stopTimer()">Stop</button>
+            `;
+            buttonWrapper.style.justifyContent = "center";
+        }
+
+        function saveTimer() {
+            clearInterval(timerInterval);
+            const timerState = JSON.parse(localStorage.getItem("timerState"));
+            const task = document.querySelector(".header").textContent;
+
+            fetch("/save_timer", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({task, timerState})
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.location.href = "/";
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+
+            localStorage.removeItem("timerState");
+        }
+
+        window.onload = function() {
+            const storedState = JSON.parse(localStorage.getItem("timerState"));
+            if (storedState) {
+                hours = storedState.hours;
+                minutes = storedState.minutes;
+                seconds = storedState.seconds;
+                updateDisplay();
+                startTimer();
+            }
+            else {
+                startTimer();
+            }
+        };
+
+    </script>
+
+    <p class="header">
+        {{ task }}
+    </p>
+
+    <div class="container">
+        <div class="watch">
+            <div class="outer-circle">
+                <div class="inner-circle">
+                    <span class="text"></span>
+                    <span class="text"></span>
+                    <span class="text"></span>
+                </div>
+            </div>
+            <div class="button-wrapper">
+                <button class="button" onclick="stopTimer()">Stop</button>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

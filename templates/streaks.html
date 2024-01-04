@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Streaks
+{% endblock %}
+
+{% block main %}
+
+    <div class="table-header">
+        My Streaks
+    </div>
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="text-start">Task</th>
+                    <th class="text-start">Streak</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if tasks %}
+                    {% for task in tasks %}
+                        <tr>
+                            <th class="text-start">{{ task["task"] }}</th>
+                            <th class="text-start">
+                                {% for row in dict %}
+                                    {% if row["id"] == task["id"] %}
+                                        {% if row["streak_length"] == 1 %}
+                                            1 day
+                                        {% elif row["streak_length"] == 0 %}
+                                            0 days
+                                        {% else %}
+                                            {{ row["streak_length"] }} days
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </th>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <th class="text-start">Days completed</th>
+                        <th class="text-start">
+                            {% if day_streaks_length == 1 %}
+                                1 day
+                            {% elif day_streaks_length == 0 %}
+                                0 days
+                            {% else %}
+                                {{ day_streaks_length }} days
+                            {% endif %}
+                        </th>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

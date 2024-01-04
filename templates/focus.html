@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Focus
+{% endblock %}
+
+{% block main %}
+
+    <form action="/focus" method="post">
+        <div class="mb-3">
+            <select class="form-select mx-auto w-auto" name="task">
+                <option disabled selected>Task</option>
+                {% for task in tasks %}
+                    <option value="{{ task["task"] }}">{{ task["task"] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button class="btn purple-button" type="submit">Start Focus Session</button>
+    </form>
+
+    <div style="margin-top: 60px;"> 
+        <a style="font-size: 20px;">Don't have the </a><a href="/tasks" style="font-size: 20px;" class="centered-link">task</a><a style="font-size: 20px;"> you want?</a>
+    </div>
+
+{% endblock %}

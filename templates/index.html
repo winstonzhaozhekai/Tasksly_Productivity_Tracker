@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block main %}
+    <div class="header">
+        Welcome, {{ user }}
+    </div>
+    <div class="header">
+        <p id="datetime"></p>
+    </div>
+    {% if tasks %}
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-start" style="width: 700px;">Tasks</th>
+                        <th class="text-start">Duration Left</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if tasks %}
+                        {% for task in tasks %}
+                            <tr>
+                                <td class="text-start">{{ task["task"] }}</td>
+                                <td class="text-start">
+                                    {% for task_dict in duration_left %}
+                                        {% if task_dict["id"] == task["id"] %}
+                                            {{ task_dict["duration"] // 3600 }} H
+                                            {{ (task_dict["duration"] % 3600) // 60 }} M
+                                            {{ task_dict["duration"] % 60 }} S
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="border-0 text-start">Number of tasks left: {{ counter_tasks }}</td>
+                        <td class="border-0 text-start">Total duration left: {{ total_duration_left // 3600 }}H {{ (total_duration_left % 3600) // 60 }}M {{ total_duration_left % 60 }}S</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="text-start">Recent Focus Sessions</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if history %}
+                        {% for row in history %}
+                        <tr>
+                            <td class="text-start">{{ row["task"] }}</td>
+                            <td class="text-end">{{ row["duration_hours"] }}H:{{ row["duration_minutes"] }}M:{{ row["duration_seconds"] }}S</td>
+                        </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    
+    {% endif %}
+
+    {% if not tasks %}
+        <div style="margin-top: 200px; font-size: 30px;">
+            <a>You currently do not have any tasks</a>
+        </div>
+        <div>
+            <a href="/tasks" class="centered-link">Add tasks here</a>
+        </div>
+    {% endif %}
+
+    <script>
+        function updateTime() {
+            const timeElement = document.getElementById("datetime");
+            const currentDate = new Date().toLocaleDateString();
+            const currentTime = new Date().toLocaleTimeString();
+            timeElement.textContent = "Current time is " + currentDate + " " + currentTime;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+
+{% endblock %}

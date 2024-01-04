@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+{% block main %}
+
+    <form action="/tasks" method="post">
+        <div class="mb-3">
+            <input required autocomplete="off" autofocus class="form-control" id="task" name="task" placeholder="Task" type="text">
+        </div>
+        <div class="mb-3">
+            <input required autocomplete="off" class="form-control" id="goal" name="goal" placeholder="Goal (hh:mm)" type="text">
+        </div>
+        <div class="text-center">
+        <button class="btn purple-button" type="submit">Add Task</button>
+        </div>
+    </form>
+    <div class="table-header">
+        My Tasks
+    </div>
+    <div class="table-container">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th class="text-start">Task</th>
+                    <th class="text-mid">Goal</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if tasks %}
+                    {% for task in tasks %}
+                        <tr data-edit-mode="false">
+                            <td class="text-start white-text">{{ task["task"] }}</td>
+                            <td class="text-mid">
+                                <span class="goal-display">{{ task["goal_hours"] }}H {{ task["goal_minutes"] }}M</span>
+                                <input type="text" class="form-control goal-input" style="display: none;" placeholder="__H __M" value="{{ task["goal_hours"] }}H {{ task["goal_minutes"] }}M">
+                            </td>
+                            <td class="text-end">
+                                <button class="btn purple-button edit-button" data-task-id="{{ task["id"] }}">Edit</button>
+                                <button class="btn purple-button" onclick="confirmDelete('{{ task["id"] }}');">Delete</button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div> 
+
+    <script>
+
+        const editButtons = document.querySelectorAll('.edit-button');
+        editButtons.forEach((button) => {
+            button.addEventListener('click', function() {
+                const row = button.closest('tr');
+                const goalDisplay = row.querySelector('.goal-display');
+                const goalInput = row.querySelector('.goal-input');
+
+                if (row.getAttribute('data-edit-mode') === 'false') {
+                    // Entering Edit mode
+                    row.setAttribute('data-edit-mode', 'true');
+                    button.textContent = 'Save';
+                    goalDisplay.style.display = 'none';
+                    goalInput.style.display = 'inline-block';
+                } else {
+                    // Exiting Edit mode
+                    row.setAttribute('data-edit-mode', 'false');
+                    button.textContent = 'Edit';
+                    goalDisplay.style.display = 'inline-block';
+                    goalInput.style.display = 'none';
+
+                    const taskId = button.getAttribute('data-task-id');
+                    const editedGoal = goalInput.value;
+                    
+                    fetch('/edit_task', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            taskId: taskId,
+                            editedGoal: editedGoal,
+                        }),
+                        headers: {
+                            'Content-Type': "application/json"
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            console.error('Failed to update the task goal:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                    });
+                }
+            });
+        });
+
+        function confirmDelete(taskId) {
+            const overlay = document.createElement('div');
+            overlay.classList.add('overlay');
+
+            // Create the confirmation dialog within the overlay
+            const confirmationDialog = document.createElement('div');
+            confirmationDialog.classList.add('confirmation-dialog');
+
+            const confirmationText = document.createElement('h3');
+            confirmationText.textContent = 'Are you sure you want to delete this task?';
+
+            const confirmButton = document.createElement('button');
+            confirmButton.textContent = 'Yes, Delete';
+            confirmButton.addEventListener('click', function () {
+                // If confirmed, proceed with deletion
+                const form = document.createElement('form');
+                form.method = 'post';
+                form.action = '/delete_task';
+                form.style.display = 'none';
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'id';
+                input.value = taskId;
+
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+
+                // Remove the overlay and confirmation dialog
+                document.body.removeChild(overlay);
+            });
+
+            const cancelButton = document.createElement('button');
+            cancelButton.textContent = 'Cancel';
+            cancelButton.addEventListener('click', function () {
+                // If canceled, remove the overlay and confirmation dialog
+                document.body.removeChild(overlay);
+            });
+
+            confirmationDialog.appendChild(confirmationText);
+            confirmationDialog.appendChild(confirmButton);
+            confirmationDialog.appendChild(cancelButton);
+
+            overlay.appendChild(confirmationDialog);
+            document.body.appendChild(overlay);
+        }
+    </script>
+
+{% endblock %}
