@@ -1,4 +1,15 @@
 # Tasksly Productivity Website
+
+## Overview
+Tasksly is a web application designed to streamline task management, facilitate focus session logging, and encourage productivity streaks. This project is implemented using Flask, a Python web framework, and SQLite for secure data storage. It incorporates features such as user authentication with password hashing to ensure data integrity and user security.
+
+## Requirements
+- Python
+- Flask
+- SQLite
+
+
+
 #### Video Demo:  https://youtu.be/I8jnLB6InSI
 #### Description:
 It is a website that allows users to register and log in to access the productivity website. 
